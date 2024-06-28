@@ -1,0 +1,8 @@
+[package]
+name = "music-chat-tracker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+message-exporter = "message_exporter"
+playlist-builder = "playlist_builder"
