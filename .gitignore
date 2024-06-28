@@ -1,0 +1,7 @@
+.env*.local
+.DS_Store
+*.code-workspace
+target
+.bazel
+bazel-*
+MODULE.bazel.lock
