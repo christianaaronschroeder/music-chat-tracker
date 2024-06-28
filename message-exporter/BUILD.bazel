@@ -1,0 +1,18 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "message_exporter",
+    srcs = ["src/lib.rs"],
+    edition = "2021"
+)
+
+rust_test(
+    name = "message_exporter_test",
+    srcs = ["src/lib.rs"],
+    deps = [
+        ":message_exporter",
+    ],
+    edition = "2021"
+)

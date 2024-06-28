@@ -1,0 +1,18 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_library(
+    name = "playlist_builder",
+    srcs = ["src/lib.rs"],
+    edition = "2021"
+)
+
+rust_test(
+    name = "playlist_builder_test",
+    srcs = ["src/lib.rs"],
+    deps = [
+        ":playlist_builder",
+    ],
+    edition = "2021"
+)
