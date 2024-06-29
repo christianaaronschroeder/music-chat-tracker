@@ -1,5 +1,5 @@
 use rspotify::{
-    model::{PlaylistId, TrackId},
+    model::{PlaylistId, TrackId, PlaylistItem, Page},
     prelude::*,
     scopes,
     AuthCodeSpotify,
@@ -19,23 +19,23 @@ async fn build_rspotify_client() -> AuthCodeSpotify {
     let spotify = AuthCodeSpotify::with_config(creds, oauth, config);
 
     // Obtaining the access token
-    let url = spotify.get_authorize_url(false).unwrap();
+    let url: String = spotify.get_authorize_url(false).unwrap();
     spotify.prompt_for_token(&url).await.unwrap();
 
     spotify
 }
 
 async fn get_playlist_track_ids(spotify: &AuthCodeSpotify, playlist_id: &PlaylistId<'_>) -> HashSet<String> {
-    let mut track_ids = HashSet::new();
+    let mut track_ids: HashSet<String> = HashSet::new();
 
-    let mut offset = 0;
-    let offset_step = 100;
+    let mut offset: u32 = 0;
+    let offset_step: u32 = 100;
     loop {
         info!("Loading playlist track ids: {}", track_ids.len());
-        let playlist = spotify
+        let playlist: Page<PlaylistItem> = spotify
             .playlist_items_manual(playlist_id.clone(), None, None, Some(offset_step), Some(offset))
             .await
-            .unwrap_or_else(|e| {
+            .unwrap_or_else(|e: rspotify::ClientError| {
                 error!("Error loading playlist items: {}", e);
                 panic!("Failed to load playlist items");
             });
@@ -68,20 +68,20 @@ async fn add_tracks_to_playlist_if_not_exists(
 ) {
     let tracks_not_in_playlist: Vec<_> = new_track_ids
         .into_iter()
-        .filter(|track_id| !existing_track_set.contains(track_id))
+        .filter(|track_id: &String| !existing_track_set.contains(track_id))
         .collect();
 
     if !tracks_not_in_playlist.is_empty() {
-        let tracks_to_add = tracks_not_in_playlist
+        let tracks_to_add: Vec<PlayableId> = tracks_not_in_playlist
             .iter()
-            .map(|track_id| track_id_str_to_playable_id(track_id))
+            .map(|track_id: &String| track_id_str_to_playable_id(track_id))
             .collect::<Vec<PlayableId>>();
 
         let playlist_id = PlaylistId::from_id(playlist_id).unwrap();
         spotify
             .playlist_add_items(playlist_id, tracks_to_add, None)
             .await
-            .unwrap_or_else(|e| {
+            .unwrap_or_else(|e: rspotify::ClientError| {
                 error!("Error adding tracks to playlist: {}", e);
                 panic!("Failed to add tracks to playlist");
             });
