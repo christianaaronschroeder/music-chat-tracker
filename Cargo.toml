@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 playlist_handler = { version = "0.1.0", path = "playlist-handler" }
+messages_scraper = { version = "0.1.0", path = "messages-scraper" }

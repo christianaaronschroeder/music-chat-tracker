@@ -89,16 +89,18 @@ async fn add_tracks_to_playlist_if_not_exists(
 }
 
 #[tokio::main]
-pub async fn add_tracks_to_playlist() {
+pub async fn add_tracks_to_playlist(
+    track_ids_to_add: Vec<String>,
+) {
     env_logger::init();
 
     let spotify: AuthCodeSpotify = build_rspotify_client().await;
 
-    let playlist_id_str: &str = "4wN2XkppT6xRzQI5js4nd3";
+    let playlist_id_str: &str = "3op9QLxlW6byL2uJEMLyIC";
     let playlist_id: PlaylistId = PlaylistId::from_id(playlist_id_str).unwrap();
-    let track_ids: HashSet<String> = get_playlist_track_ids(&spotify, &playlist_id).await;
+    let existing_track_ids: HashSet<String> = get_playlist_track_ids(&spotify, &playlist_id).await;
 
-    info!("Number of tracks: {}", track_ids.len());
+    info!("Number of existing tracks: {}", existing_track_ids.len());
 
-    add_tracks_to_playlist_if_not_exists(&spotify, playlist_id_str, track_ids, vec!["5iKndSu1XI74U2OZePzP8L".to_string()]).await;
+    add_tracks_to_playlist_if_not_exists(&spotify, playlist_id_str, existing_track_ids, track_ids_to_add).await;
 }
