@@ -23,3 +23,6 @@ RSPOTIFY_REDIRECT_URI
 need to give full disk access to VSCode and the terminal
 
 `RUST_LOG=info cargo run` to run with logging
+
+
+`messages-exporter-copy.php` is copied from here, https://github.com/cfinke/OSX-Messages-Exporter
