@@ -102,4 +102,6 @@ pub async fn add_tracks_to_playlist(
     info!("Number of existing tracks: {}", existing_track_ids.len());
 
     add_tracks_to_playlist_if_not_exists(&spotify, playlist_id_str, existing_track_ids, track_ids_to_add).await;
+
+    info!("View the playlist at: https://open.spotify.com/playlist/{}", playlist_id_str);
 }
