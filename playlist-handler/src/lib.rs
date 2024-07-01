@@ -14,7 +14,7 @@ async fn build_rspotify_client() -> AuthCodeSpotify {
     info!("Building Spotify client...");
 
     let creds = Credentials::from_env().unwrap();
-    let oauth = OAuth::from_env(scopes!("user-read-currently-playing playlist-modify-public")).unwrap();
+    let oauth = OAuth::from_env(scopes!("playlist-modify-public")).unwrap();
     let config = Config {
         token_cached: true,
         ..Default::default()
