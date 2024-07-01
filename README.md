@@ -26,3 +26,9 @@ need to give full disk access to VSCode and the terminal
 
 
 `messages-exporter-copy.php` is copied from here, https://github.com/cfinke/OSX-Messages-Exporter
+
+
+TODO:
+- get added date of most recent song to use as the filter start date
+- rewrite that giant php thing in Rust, and make it smaller for only what I need
+- setup contiuous running, check for updates ever day or few hours
