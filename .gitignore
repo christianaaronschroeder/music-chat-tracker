@@ -5,3 +5,5 @@ target
 .bazel
 bazel-*
 MODULE.bazel.lock
+.cache
+music_chat_exports/music_chat_backup*
