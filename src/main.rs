@@ -1,5 +1,9 @@
-use playlist_handler::add_tracks_to_playlist;
+mod messages_scraper;
+mod playlist_handler;
+
 use messages_scraper::get_tracks_from_messages;
+use playlist_handler::add_tracks_to_playlist;
+
 use log::info;
 use env_logger;
 use std::time::Duration;
