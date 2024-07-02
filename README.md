@@ -46,8 +46,10 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
 ### Running it!
-Running the Rust application is super simple, `cargo run`.
-If you want to run it with logging, `RUST_LOG=info cargo run`.
+- Build it: `cargo build`
+- Test it: `cargo test`
+- Run it: `cargo run`
+- Run it with logs: `RUST_LOG=info cargo run`
 
 ## Notes
 ### TODO:
