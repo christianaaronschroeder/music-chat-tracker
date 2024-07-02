@@ -54,10 +54,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ## Notes
 ### TODO:
 - [ ] get added date of most recent song to use as the filter start date
-- [ ] rewrite that giant php thing in Rust, and make it smaller for only what I need
+- [x] rewrite that giant php thing in Rust, and make it smaller for only what I need
 - [ ] setup cron job
 - [ ] Rerun the script from Josh's iMessage so we can get all the songs from before I (Christian) joined the chat
     - This should not be a simple run of the script because the songs from before my time would be added to the playlist as if they were sent recently. This should be a one-time, manual process in which we use part of the script to get all the track IDs and then we can write a custom script to add them to the top of the playlist.
-     
-### Other
-The file `messages-exporter-copy.php` is copied from [cfinke's message exporter repo](https://github.com/cfinke/OSX-Messages-Exporter). We do not need all the bells and whistles that it comes with and plan to replace it with a much lighter weight message exporter written in Rust.
