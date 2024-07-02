@@ -1,108 +1,145 @@
-use chrono::Utc;
 use log::info;
 use regex::Regex;
-use scraper::{Html, Selector};
-use std::fs;
-use std::path::Path;
-use std::process::Command;
-use tempfile::tempdir;
+use rusqlite::{Connection, Result};
+use std::str;
+#[derive(Debug)]
+struct Chat {
+    id: i32,
+}
 
-fn export_chat_messages(
+#[derive(Debug)]
+struct Message {
+    id: i32,
+    text: Option<String>,
+    attributed_body: String,
+}
+
+const SPOTIFY_TRACK_URL_HEXCODE: &str =
+    "68747470733a2f2f6f70656e2e73706f746966792e636f6d2f747261636b";
+
+fn get_chat_id(conn: &Connection, display_name: &str) -> Result<i32> {
+    let mut stmt = conn
+        .prepare("select * from chat where display_name=? and service_name='iMessage' limit 1")?;
+    let chat_iter = stmt.query_map([display_name], |row| Ok(Chat { id: row.get(0)? }))?;
+
+    for chat in chat_iter {
+        return Ok(chat.unwrap().id);
+    }
+    Ok(-1)
+}
+
+fn get_messages(
+    conn: &Connection,
+    chat_id: &i32,
     filter_start_date: &str,
-    filter_stop_date: &str,
-    output_dir: &Path,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let script_path = "messages-exporter-copy.php";
-    let music_chat_name = "+15404495562, +15405531247, +15405778447, Ideen Ashraf, Jeffrey Smith, Josh Sternfeld, Marshall Hurst, Rustin Ahmadian, Wiatt Bingley";
+    filter_stop_date: Option<&str>,
+) -> Result<Vec<Message>, rusqlite::Error> {
+    let filter_stop_date = match filter_stop_date {
+        Some(date) => date,
+        None => "9999-12-31 23:59:59",
+    };
 
-    let output_template = format!(
-        "music_chat_backup_{}_{}",
-        filter_start_date, filter_stop_date
+    let query = format!(
+        r#"
+        SELECT
+            message.ROWID,
+            message.text,
+            hex(message.attributedBody),
+            datetime(message.date/1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') AS date_from_nanoseconds,
+            datetime(message.date + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') AS date_from_seconds
+        FROM message LEFT JOIN handle ON message.handle_id=handle.ROWID
+        WHERE message.ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id={})
+        AND hex(message.attributedBody) LIKE '%{}%'
+        AND datetime(message.date / 1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') >= '{}'
+        AND datetime(message.date / 1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') <= '{}';
+        "#,
+        chat_id, SPOTIFY_TRACK_URL_HEXCODE, filter_start_date, filter_stop_date
     );
-    let output_dir_str = output_dir.to_str().unwrap();
+    let mut stmt = conn.prepare(&query)?;
+    let message_iter = stmt.query_map([], |row| {
+        Ok(Message {
+            id: row.get(0)?,
+            text: row.get(1)?,
+            attributed_body: row.get(2)?,
+        })
+    })?;
 
-    let args: [(&str, &str); 5] = [
-        ("--output_directory", output_dir_str),
-        ("--path-template", &output_template),
-        ("--date-start", filter_start_date),
-        ("--date-stop", filter_stop_date),
-        ("--match", music_chat_name),
-    ];
-
-    let mut command = Command::new("php");
-    command.arg(script_path);
-    for (arg_name, value) in &args {
-        command.arg(format!("{}={}", arg_name, value));
-    }
-
-    command.output()?;
-
-    let expected_output_path = format!("{}/{}.html", output_dir_str, output_template);
-    if !fs::metadata(&expected_output_path).is_ok() {
-        return Err(Box::new(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            format!("No file was exported to {}", expected_output_path),
-        )));
-    }
-
-    info!(
-        "Transcript successfully exported to {}",
-        expected_output_path
-    );
-    Ok(expected_output_path)
+    let messages: Result<Vec<Message>, rusqlite::Error> = message_iter.collect();
+    messages
 }
 
-pub fn load_chat_export(file_path: &str) -> Html {
-    let html_str = fs::read_to_string(file_path).expect("Something went wrong reading the file");
-    let soup = Html::parse_document(&html_str);
-    info!("Conversation loaded");
-    soup
+fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, String> {
+    let hex = hex.trim();
+    if hex.len() % 2 != 0 {
+        return Err(String::from("Hex string has an odd length"));
+    }
+
+    let bytes: Result<Vec<u8>, _> = (0..hex.len())
+        .step_by(2)
+        .map(|i| u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| e.to_string()))
+        .collect();
+
+    bytes
 }
 
-pub fn extract_track_ids(soup: &Html) -> Vec<String> {
-    let selector = Selector::parse("p.m").unwrap();
-    let re = Regex::new(r"^https://open.spotify.com/track").unwrap();
+fn hex_str_to_str(hex_string: &str) -> Result<String, String> {
+    match hex_to_bytes(&hex_string) {
+        Ok(bytes) => Ok(String::from_utf8_lossy(&bytes).to_string()),
+        Err(e) => Err(e),
+    }
+}
+
+fn extract_track_ids_from_message(input: &str) -> Vec<String> {
+    let re = Regex::new(r"https://open\.spotify\.com/track/([a-zA-Z0-9]+)").unwrap();
     let mut track_ids = Vec::new();
-
-    for element in soup.select(&selector) {
-        if let Some(link) = element.text().next() {
-            if re.is_match(link) {
-                let parts: Vec<&str> = link.split('/').collect();
-                if let Some(track_id) = parts.last() {
-                    let id = track_id.split('?').next().unwrap();
-                    track_ids.push(id.to_string());
-                }
+    for cap in re.captures_iter(input) {
+        if let Some(track_id) = cap.get(1) {
+            // We only want the valid track IDs that are 22 characters long,
+            // because the attributeBody we are pulling from has a bunch of noise
+            if track_id.len() != 22 {
+                continue;
             }
+            track_ids.push(track_id.as_str().to_string());
         }
     }
 
-    let mut unique_ids = Vec::new();
+    track_ids
+}
+
+fn extract_track_ids(messages: Vec<Message>) -> Vec<String> {
+    let mut track_ids: Vec<String> = Vec::new();
+
+    for message in messages {
+        let converted_string = hex_str_to_str(&message.attributed_body).unwrap();
+        let ids = extract_track_ids_from_message(&converted_string);
+        track_ids.extend(ids);
+    }
+
+    // we do this instead of using a HashSet to maintain chronological order
+    let mut unique_ids: Vec<String> = Vec::new();
     for track_id in track_ids {
         if !unique_ids.contains(&track_id) {
             unique_ids.push(track_id);
         }
     }
 
-    info!("{} Unique IDs found", unique_ids.len());
-
     unique_ids
 }
 
 pub fn get_tracks_from_messages(
+    chat_db_path: &str,
+    chat_display_name: &str,
     filter_start_date: &str,
-) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let current_date: String = Utc::now().format("%Y-%m-%d").to_string();
+    filter_stop_date: Option<&str>,
+) -> Result<Vec<String>> {
+    let conn = Connection::open(chat_db_path)?;
 
-    let tmp_dir: tempfile::TempDir = tempdir()?;
-
-    let output_path: String =
-        export_chat_messages(filter_start_date, &current_date, tmp_dir.path())
-            .expect("Failed to export chat messages");
-    let soup: Html = load_chat_export(&output_path);
-    let track_ids: Vec<String> = extract_track_ids(&soup);
-
-    tmp_dir.close()?;
-
+    let chat_id = get_chat_id(&conn, chat_display_name)?;
+    info!("Chat ID: {}", chat_id);
+    let messages = get_messages(&conn, &chat_id, &filter_start_date, filter_stop_date)?;
+    info!("Messages: {:?}", messages.len());
+    let track_ids = extract_track_ids(messages);
+    info!("Track IDs: {:?}", track_ids.len());
     Ok(track_ids)
 }
 
