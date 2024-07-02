@@ -1,37 +1,61 @@
 # music-chat-tracker
 
-Install rust
+## Background
+#### Context
+We are in a several-years-old group chat with several of our friends where we discuss music, and we share songs through Spotify links.
+#### Problem
+Many of the chat members like to "claim" songs, i.e. make sure everyone knows they were the one who "found it." So, this causes a stir whenever a song that was previously shared is shared again. Due to the age of te group chat it, and the lackluster search feature in Apple Messages, it can be difficult to determine if a particular song has been shared before.
+#### Solution
+Make an automatically-updated Spotify playlist that acts as an archive of all songs that have been shared in the group chat.
+
+## Dev Environment Setup
+### Requirements
+This project should be run on MacOS with Messages signed in and synced. But it could be setup to work on a different OS as long there is a `chat.db` sqlite database of the messages available.
+You will need both Rust and PHP installed:
+- [Install Rust](https://www.rust-lang.org/tools/install) `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- [Install PHP](https://www.php.net/manual/en/install.macosx.packages.php) `brew install php` (planning to remove PHP as a requirement)
+
+### IDE
+We prefer to use VSCode:
+- [Install VSCode](https://code.visualstudio.com/download)
+- Add the [`rust-analyzer` extension](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+
+### Environment Variables
+To update the playlist through the Spotify Web API you will need a client id, client secret, and redirect uri. These can be found by getting a spotify dev license
+[https://developer.spotify.com/dashboard/create](https://developer.spotify.com/dashboard/create). If you don't care about the redirect uri then you can really set it to anything, like http://spotify.com or http://google.com.
+
+You will need to save these values as environment variables in the .env file:
 ```
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+RSPOTIFY_CLIENT_ID="your-client-id"
+RSPOTIFY_CLIENT_SECRET="your-client-secret"
+RSPOTIFY_REDIRECT_URI="your-redirect-uri"
 ```
 
-You will also need php installed, for now
+### Full Disk Access
+On MacOS, for the message exporter script to have access to your messages in `~Library/Messages/chat.db` you will need to [give Full Disk Access](https://kb.synology.com/en-us/C2/tutorial/How_to_enable_Full_Disk_Access_on_a_Mac) to your IDE.
+1. Click on the Apple icon on the top left corner of your screen.
+2. Select System Preferences.
+3. Go to Security & Privacy Preferences > Privacy and click Full Disk Access from the left panel.
+![image](https://github.com/christianaaronschroeder/music-chat-tracker/assets/43764673/41a6f93d-39e2-4e0e-a40a-b6f601a2e370)
 
-VSCODE extensions needed
+Error you might see if Full Disk Access is not given:
 ```
-rust-analyzer
-```
-
-
-You will need these env variables filled out in the .env file.
-These can be found by getting a spotify dev license
-https://developer.spotify.com/dashboard/create
-
-```
-RSPOTIFY_CLIENT_ID
-RSPOTIFY_CLIENT_SECRET
-RSPOTIFY_REDIRECT_URI
+thread 'main' panicked at messages-scraper/src/lib.rs:93:102:
+Failed to export chat messages: Custom { kind: NotFound, error: "No file was exported to /var/folders/s8/8xydrdd946l1t00fxgxbh27m0000gn/T/.tmpipDVWs/messages_export.html" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
-You need to give full disk access to VSCode and the terminal session
+### Running it!
+Running the Rust application is super simple, `cargo run`.
+If you want to run it with logging, `RUST_LOG=info cargo run`.
 
-`RUST_LOG=info cargo run` to run with logging
-
-
-`messages-exporter-copy.php` is copied from here, https://github.com/cfinke/OSX-Messages-Exporter
-
-
-TODO:
-- get added date of most recent song to use as the filter start date
-- rewrite that giant php thing in Rust, and make it smaller for only what I need
-- setup contiuous running, check for updates ever day or few hours
+## Notes
+### TODO:
+- [ ] get added date of most recent song to use as the filter start date
+- [ ] rewrite that giant php thing in Rust, and make it smaller for only what I need
+- [ ] setup cron job
+- [ ] Rerun the script from Josh's iMessage so we can get all the songs from before I (Christian) joined the chat
+    - This should not be a simple run of the script because the songs from before my time would be added to the playlist as if they were sent recently. This should be a one-time, manual process in which we use part of the script to get all the track IDs and then we can write a custom script to add them to the top of the playlist.
+     
+### Other
+The file `messages-exporter-copy.php` is copied from [cfinke's message exporter repo](https://github.com/cfinke/OSX-Messages-Exporter). We do not need all the bells and whistles that it comes with and plan to replace it with a much lighter weight message exporter written in Rust.
