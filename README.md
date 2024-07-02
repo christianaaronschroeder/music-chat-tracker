@@ -1,19 +1,20 @@
 # music-chat-tracker
 
-install rust
+Install rust
 ```
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-also need php installed, for now
+You will also need php installed, for now
 
-extensions
+VSCODE extensions needed
 ```
 rust-analyzer
 ```
 
 
-need these env variables in a .env file
+You will need these env variables filled out in the .env file.
+These can be found by getting a spotify dev license
 ```
 RSPOTIFY_CLIENT_ID
 RSPOTIFY_CLIENT_SECRET
