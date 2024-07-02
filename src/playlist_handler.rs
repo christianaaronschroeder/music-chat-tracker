@@ -1,14 +1,10 @@
+use log::{error, info};
 use rspotify::{
-    model::{PlaylistId, TrackId, PlaylistItem, Page},
+    model::{Page, PlaylistId, PlaylistItem, TrackId},
     prelude::*,
-    scopes,
-    AuthCodeSpotify,
-    Credentials,
-    OAuth,
-    Config,
+    scopes, AuthCodeSpotify, Config, Credentials, OAuth,
 };
 use std::collections::HashSet;
-use log::{error, info};
 
 async fn build_rspotify_client() -> AuthCodeSpotify {
     info!("Building Spotify client...");
@@ -28,7 +24,10 @@ async fn build_rspotify_client() -> AuthCodeSpotify {
     spotify
 }
 
-async fn get_playlist_track_ids(spotify: &AuthCodeSpotify, playlist_id: &PlaylistId<'_>) -> HashSet<String> {
+async fn get_playlist_track_ids(
+    spotify: &AuthCodeSpotify,
+    playlist_id: &PlaylistId<'_>,
+) -> HashSet<String> {
     let mut track_ids: HashSet<String> = HashSet::new();
 
     let mut offset: u32 = 0;
@@ -36,7 +35,13 @@ async fn get_playlist_track_ids(spotify: &AuthCodeSpotify, playlist_id: &Playlis
     loop {
         info!("Loading playlist track ids: {}", track_ids.len());
         let playlist: Page<PlaylistItem> = spotify
-            .playlist_items_manual(playlist_id.clone(), None, None, Some(offset_step), Some(offset))
+            .playlist_items_manual(
+                playlist_id.clone(),
+                None,
+                None,
+                Some(offset_step),
+                Some(offset),
+            )
             .await
             .unwrap_or_else(|e: rspotify::ClientError| {
                 error!("Error loading playlist items: {}", e);
@@ -92,11 +97,7 @@ async fn add_tracks_to_playlist_if_not_exists(
 }
 
 #[tokio::main]
-pub async fn add_tracks_to_playlist(
-    playlist_id_str: &str,
-    track_ids_to_add: Vec<String>,
-) {
-
+pub async fn add_tracks_to_playlist(playlist_id_str: &str, track_ids_to_add: Vec<String>) {
     let spotify: AuthCodeSpotify = build_rspotify_client().await;
 
     let playlist_id: PlaylistId = PlaylistId::from_id(playlist_id_str).unwrap();
@@ -104,11 +105,19 @@ pub async fn add_tracks_to_playlist(
 
     info!("Number of existing tracks: {}", existing_track_ids.len());
 
-    add_tracks_to_playlist_if_not_exists(&spotify, playlist_id_str, existing_track_ids, track_ids_to_add).await;
+    add_tracks_to_playlist_if_not_exists(
+        &spotify,
+        playlist_id_str,
+        existing_track_ids,
+        track_ids_to_add,
+    )
+    .await;
 
-    info!("View the playlist at: https://open.spotify.com/playlist/{}", playlist_id_str);
+    info!(
+        "View the playlist at: https://open.spotify.com/playlist/{}",
+        playlist_id_str
+    );
 }
-
 
 // temp for real tests
 pub fn add(a: i32, b: i32) -> i32 {

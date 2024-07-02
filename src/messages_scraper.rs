@@ -1,10 +1,10 @@
+use chrono::Utc;
+use log::info;
+use regex::Regex;
+use scraper::{Html, Selector};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use log::info;
-use chrono::Utc;
-use scraper::{Html, Selector};
-use regex::Regex;
 use tempfile::tempdir;
 
 fn export_chat_messages(
@@ -15,7 +15,10 @@ fn export_chat_messages(
     let script_path = "messages-exporter-copy.php";
     let music_chat_name = "+15404495562, +15405531247, +15405778447, Ideen Ashraf, Jeffrey Smith, Josh Sternfeld, Marshall Hurst, Rustin Ahmadian, Wiatt Bingley";
 
-    let output_template = format!("music_chat_backup_{}_{}", filter_start_date, filter_stop_date);
+    let output_template = format!(
+        "music_chat_backup_{}_{}",
+        filter_start_date, filter_stop_date
+    );
     let output_dir_str = output_dir.to_str().unwrap();
 
     let args: [(&str, &str); 5] = [
@@ -42,13 +45,15 @@ fn export_chat_messages(
         )));
     }
 
-    info!("Transcript successfully exported to {}", expected_output_path);
+    info!(
+        "Transcript successfully exported to {}",
+        expected_output_path
+    );
     Ok(expected_output_path)
 }
 
 pub fn load_chat_export(file_path: &str) -> Html {
-    let html_str = fs::read_to_string(file_path)
-        .expect("Something went wrong reading the file");
+    let html_str = fs::read_to_string(file_path).expect("Something went wrong reading the file");
     let soup = Html::parse_document(&html_str);
     info!("Conversation loaded");
     soup
@@ -90,15 +95,16 @@ pub fn get_tracks_from_messages(
 
     let tmp_dir: tempfile::TempDir = tempdir()?;
 
-    let output_path: String = export_chat_messages(filter_start_date, &current_date, tmp_dir.path()).expect("Failed to export chat messages");
+    let output_path: String =
+        export_chat_messages(filter_start_date, &current_date, tmp_dir.path())
+            .expect("Failed to export chat messages");
     let soup: Html = load_chat_export(&output_path);
     let track_ids: Vec<String> = extract_track_ids(&soup);
 
     tmp_dir.close()?;
-    
+
     Ok(track_ids)
 }
-
 
 // temp for real tests
 pub fn add(a: i32, b: i32) -> i32 {
