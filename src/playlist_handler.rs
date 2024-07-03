@@ -1,3 +1,4 @@
+use chrono::prelude::*;
 use log::{error, info};
 use rspotify::{
     model::{Page, PlaylistId, PlaylistItem, TrackId},
@@ -112,6 +113,12 @@ pub async fn add_tracks_to_playlist(playlist_id_str: &str, track_ids_to_add: Vec
         track_ids_to_add,
     )
     .await;
+
+    let current_date = Local::now().format("%Y-%m-%d").to_string();
+    let description = format!("All songs sent in the Music (A Little Spam) group chat since I was added. Last updated on {}.", current_date);
+    let x = spotify
+        .playlist_change_detail(playlist_id, None, None, Some(description.as_str()), None)
+        .await;
 
     info!(
         "View the playlist at: https://open.spotify.com/playlist/{}",

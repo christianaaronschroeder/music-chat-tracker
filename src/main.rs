@@ -12,10 +12,14 @@ use std::time::Duration;
 fn update_playlist(playlist_id_str: &str, filter_start_date: &str) {
     let chat_db_path = "../Library/Messages/chat.db";
     let chat_display_name = "Music (A Little Spam)";
+
+    // get the tracks from the chat
     let track_ids_to_add: Vec<String> =
         get_tracks_from_messages(chat_db_path, chat_display_name, filter_start_date, None)
             .expect("Failed to get tracks from messages");
     info!("{:?} tracks found in the chat", track_ids_to_add.len());
+
+    // add tracks to the playlist
     add_tracks_to_playlist(playlist_id_str, track_ids_to_add);
 }
 
