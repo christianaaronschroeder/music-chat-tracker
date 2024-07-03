@@ -13,3 +13,5 @@ tempfile = "3.10.1"
 rspotify = { version = "0.12.0", features = ["env-file", "cli"] }
 tokio = { version = "1", features = ["full"] }
 rusqlite = { version = "0.31.0", features = ["bundled", "blob"] }
+clap = { version = "4.5.8", features = ["cargo"] }
+dotenv = "0.15.0"

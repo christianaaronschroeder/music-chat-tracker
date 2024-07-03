@@ -9,10 +9,18 @@ use log::info;
 use std::thread::sleep;
 use std::time::Duration;
 
-fn update_playlist(playlist_id_str: &str, filter_start_date: &str) {
-    let chat_db_path = "../Library/Messages/chat.db";
-    let chat_display_name = "Music (A Little Spam)";
+use clap::{Arg, Command};
+use dotenv::dotenv;
+use std::env;
 
+const DEFAULT_UPDATE_INTERVAL_S: u64 = 60 * 60 * 6; // 6 hours
+
+fn update_playlist(
+    playlist_id_str: &str,
+    filter_start_date: &str,
+    chat_db_path: &str,
+    chat_display_name: &str,
+) {
     // get the tracks from the chat
     let track_ids_to_add: Vec<String> =
         get_tracks_from_messages(chat_db_path, chat_display_name, filter_start_date, None)
@@ -20,17 +28,67 @@ fn update_playlist(playlist_id_str: &str, filter_start_date: &str) {
     info!("{:?} tracks found in the chat", track_ids_to_add.len());
 
     // add tracks to the playlist
-    add_tracks_to_playlist(playlist_id_str, track_ids_to_add);
+    add_tracks_to_playlist(playlist_id_str, track_ids_to_add, chat_display_name);
 }
 
 fn main() {
     env_logger::init();
-    let interval = Duration::from_secs(60 * 60 * 6); // run the update every hour
-    let playlist_id_str: &str = "7hVMUyFFi6bNtjO4hubtJm";
-    let filter_start_date: &str = "2024-07-01";
+
+    let matches = Command::new("Env CLI Example")
+        .arg(Arg::new("playlist_id").short('p').long("playlist-id"))
+        .arg(
+            Arg::new("chat_display_name")
+                .short('c')
+                .long("chat-display-name"),
+        )
+        .arg(
+            Arg::new("filter_start_date")
+                .short('f')
+                .long("filter-start-date"),
+        )
+        .arg(
+            Arg::new("update_interval_s")
+                .short('i')
+                .long("update-interval-s"),
+        )
+        .arg(Arg::new("chat_db_path").short('d').long("chat-db-path"))
+        .get_matches();
+
+    // Read the defaults from the environment variables
+    dotenv().ok();
+    let chat_db_path_env = env::var("CHAT_DB_PATH").unwrap();
+    let chat_display_name_env = env::var("CHAT_DISPLAY_NAME").unwrap();
+    let playlist_id_str_env = env::var("PLAYLIST_ID").unwrap();
+    let filter_start_date_env = env::var("DEFAULT_FILTER_START_DATE").unwrap();
+
+    // Overwrite environment variables with command line arguments if provided
+    let playlist_id_str = matches
+        .get_one::<String>("playlist_id")
+        .unwrap_or(&playlist_id_str_env);
+    let chat_db_path = matches
+        .get_one::<String>("chat_db_path")
+        .unwrap_or(&chat_db_path_env);
+    let chat_display_name = matches
+        .get_one::<String>("chat_display_name")
+        .unwrap_or(&chat_display_name_env);
+    let filter_start_date = matches
+        .get_one("filter_start_date")
+        .unwrap_or(&filter_start_date_env);
+    let update_interval_s = matches
+        .get_one("update_interval_s")
+        .unwrap_or(&DEFAULT_UPDATE_INTERVAL_S.to_string())
+        .parse::<u64>()
+        .expect("Failed to parse update interval");
+
+    let interval = Duration::from_secs(update_interval_s);
 
     loop {
-        update_playlist(playlist_id_str, filter_start_date);
+        update_playlist(
+            playlist_id_str,
+            filter_start_date,
+            chat_db_path,
+            chat_display_name,
+        );
         sleep(interval);
     }
 }

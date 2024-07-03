@@ -98,7 +98,11 @@ async fn add_tracks_to_playlist_if_not_exists(
 }
 
 #[tokio::main]
-pub async fn add_tracks_to_playlist(playlist_id_str: &str, track_ids_to_add: Vec<String>) {
+pub async fn add_tracks_to_playlist(
+    playlist_id_str: &str,
+    track_ids_to_add: Vec<String>,
+    chat_display_name: &str,
+) {
     let spotify: AuthCodeSpotify = build_rspotify_client().await;
 
     let playlist_id: PlaylistId = PlaylistId::from_id(playlist_id_str).unwrap();
@@ -115,9 +119,17 @@ pub async fn add_tracks_to_playlist(playlist_id_str: &str, track_ids_to_add: Vec
     .await;
 
     let current_date = Local::now().format("%Y-%m-%d").to_string();
-    let description = format!("All songs sent in the Music (A Little Spam) group chat since I was added. Last updated on {}.", current_date);
-    let x = spotify
-        .playlist_change_detail(playlist_id, None, None, Some(description.as_str()), None)
+    let updated_playlist_name =
+        format!("{} Archive - (Updated {})", chat_display_name, current_date);
+    let updated_playlist_description = format!("All songs sent in the Music (A Little Spam) group chat since I was added. Last updated on {}.", current_date);
+    let _ = spotify
+        .playlist_change_detail(
+            playlist_id,
+            Some(updated_playlist_name.as_str()),
+            None,
+            Some(updated_playlist_description.as_str()),
+            None,
+        )
         .await;
 
     info!(
