@@ -29,6 +29,10 @@ You will need to save these values as environment variables in the .env file:
 RSPOTIFY_CLIENT_ID="your-client-id"
 RSPOTIFY_CLIENT_SECRET="your-client-secret"
 RSPOTIFY_REDIRECT_URI="your-redirect-uri"
+CHAT_DB_PATH = "~/Library/Messages/chat.db"
+CHAT_DISPLAY_NAME = "Name of The Chat"
+PLAYLIST_ID = "yourplaylistid1234"
+DEFAULT_FILTER_START_DATE = "YYYY-MM-DD"
 ```
 
 ### Full Disk Access
@@ -50,6 +54,18 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 - Test it: `cargo test`
 - Run it: `cargo run`
 - Run it with logs: `RUST_LOG=info cargo run`
+#### Arguments
+You can use the following command line arguments to override the values in your .env:
+
+`--playlist-id`, `-p` - The ID of the playlist.
+
+`--chat-display-name`, `-c` - The display name for the chat.
+
+`--filter-start-date`, `-f` - The start date for filtering.
+
+`--update-interval-s`, `-i` - The update interval in seconds. Defaults to `60*60*6`, 6 hours.
+
+`--chat-db-path`, `-d` - The path to the chat database.
 
 ## Notes
 ### TODO:
