@@ -25,7 +25,7 @@ fn update_playlist(playlist_id_str: &str, filter_start_date: &str) {
 
 fn main() {
     env_logger::init();
-    let interval = Duration::from_secs(60 * 60); // run the update every hour
+    let interval = Duration::from_secs(60 * 60 * 6); // run the update every hour
     let playlist_id_str: &str = "7hVMUyFFi6bNtjO4hubtJm";
     let filter_start_date: &str = "2024-07-01";
 
