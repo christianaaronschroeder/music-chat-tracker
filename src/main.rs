@@ -12,6 +12,7 @@ use std::time::Duration;
 use clap::{Arg, Command};
 use dotenv::dotenv;
 use std::env;
+use tempfile::tempdir;
 
 const DEFAULT_UPDATE_INTERVAL_S: u64 = 60 * 60 * 6; // 6 hours
 
@@ -20,15 +21,25 @@ fn update_playlist(
     filter_start_date: &str,
     chat_db_path: &str,
     chat_display_name: &str,
+    latest_message_id_file_path: &std::path::Path,
 ) {
     // get the tracks from the chat
-    let track_ids_to_add: Vec<String> =
-        get_tracks_from_messages(chat_db_path, chat_display_name, filter_start_date, None)
-            .expect("Failed to get tracks from messages");
+    let track_ids_to_add: Vec<String> = get_tracks_from_messages(
+        chat_db_path,
+        chat_display_name,
+        filter_start_date,
+        None,
+        latest_message_id_file_path,
+    )
+    .expect("Failed to get tracks from messages");
     info!("{:?} tracks found in the chat", track_ids_to_add.len());
 
     // add tracks to the playlist
-    add_tracks_to_playlist(playlist_id_str, track_ids_to_add, chat_display_name);
+    if !track_ids_to_add.is_empty() {
+        add_tracks_to_playlist(playlist_id_str, track_ids_to_add, chat_display_name);
+    } else {
+        info!("No new tracks to add to the playlist");
+    }
 }
 
 fn main() {
@@ -82,12 +93,17 @@ fn main() {
 
     let interval = Duration::from_secs(update_interval_s);
 
+    // create a temp file to hold the latest message id
+    let tempdir = tempdir().unwrap();
+    let latest_message_id_file_path = tempdir.path().join("last-message-id.txt");
+    let _ = std::fs::File::create(&latest_message_id_file_path).unwrap();
     loop {
         update_playlist(
             playlist_id_str,
             filter_start_date,
             chat_db_path,
             chat_display_name,
+            latest_message_id_file_path.as_path(),
         );
         sleep(interval);
     }

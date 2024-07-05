@@ -1,7 +1,10 @@
 use log::info;
 use regex::Regex;
 use rusqlite::{Connection, Result};
+use std::fs::{read_to_string, OpenOptions};
+use std::io::Write;
 use std::str;
+
 #[derive(Debug)]
 struct Chat {
     id: i32,
@@ -51,7 +54,8 @@ fn get_messages(
         WHERE message.ROWID IN (SELECT message_id FROM chat_message_join WHERE chat_id={})
         AND hex(message.attributedBody) LIKE '%{}%'
         AND datetime(message.date / 1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') >= '{}'
-        AND datetime(message.date / 1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') <= '{}';
+        AND datetime(message.date / 1000000000 + strftime('%s', '2001-01-01 00:00:00'), 'unixepoch', 'localtime') <= '{}'
+        ORDER BY date_from_nanoseconds ASC;
         "#,
         chat_id, SPOTIFY_TRACK_URL_HEXCODE, filter_start_date, filter_stop_date
     );
@@ -131,15 +135,40 @@ pub fn get_tracks_from_messages(
     chat_display_name: &str,
     filter_start_date: &str,
     filter_stop_date: Option<&str>,
+    latest_message_id_file_path: &std::path::Path,
 ) -> Result<Vec<String>> {
     let conn = Connection::open(chat_db_path)?;
 
+    info!("path: {:?}", latest_message_id_file_path);
+
     let chat_id = get_chat_id(&conn, chat_display_name)?;
     info!("Chat ID: {}", chat_id);
+
     let messages = get_messages(&conn, &chat_id, &filter_start_date, filter_stop_date)?;
     info!("Messages: {:?}", messages.len());
-    let track_ids = extract_track_ids(messages);
+
+    // Check if the latest message is the same as last time the script was run
+    let latest_message_id_str = messages.last().unwrap().id.to_string();
+    let last_message_id_str = read_to_string(latest_message_id_file_path).unwrap();
+    info!("Latest message ID: {}", latest_message_id_str);
+    info!("Last message ID: {}", last_message_id_str);
+
+    // if the latest message is the same as the last message, we know we don't need to check for new messages
+    let track_ids = if latest_message_id_str != last_message_id_str {
+        extract_track_ids(messages)
+    } else {
+        Vec::new()
+    };
     info!("Track IDs: {:?}", track_ids.len());
+
+    // write the latest message id to the file
+    let mut last_message_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(latest_message_id_file_path)
+        .unwrap();
+    let _ = last_message_file.write_all(latest_message_id_str.as_bytes());
+
     Ok(track_ids)
 }
 
