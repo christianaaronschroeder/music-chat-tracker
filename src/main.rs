@@ -9,12 +9,13 @@ use log::info;
 use std::thread::sleep;
 use std::time::Duration;
 
+use chrono;
 use clap::{Arg, Command};
 use dotenv::dotenv;
 use std::env;
 use tempfile::tempdir;
 
-const DEFAULT_UPDATE_INTERVAL_S: u64 = 60 * 60 * 6; // 6 hours
+const DEFAULT_UPDATE_INTERVAL_S: u64 = 60 * 60; // 1 hour
 
 fn update_playlist(
     playlist_id_str: &str,
@@ -32,13 +33,12 @@ fn update_playlist(
         latest_message_id_file_path,
     )
     .expect("Failed to get tracks from messages");
-    info!("{:?} tracks found in the chat", track_ids_to_add.len());
 
     // add tracks to the playlist
     if !track_ids_to_add.is_empty() {
         add_tracks_to_playlist(playlist_id_str, track_ids_to_add, chat_display_name);
     } else {
-        info!("No new tracks to add to the playlist");
+        info!("No new tracks to add to the playlist. Waiting for next update...");
     }
 }
 
@@ -82,7 +82,7 @@ fn main() {
     let chat_display_name = matches
         .get_one::<String>("chat_display_name")
         .unwrap_or(&chat_display_name_env);
-    let filter_start_date = matches
+    let mut filter_start_date = matches
         .get_one("filter_start_date")
         .unwrap_or(&filter_start_date_env);
     let update_interval_s = matches
@@ -97,7 +97,21 @@ fn main() {
     let tempdir = tempdir().unwrap();
     let latest_message_id_file_path = tempdir.path().join("last-message-id.txt");
     let _ = std::fs::File::create(&latest_message_id_file_path).unwrap();
+
+    // after the first loop, we can switch the filter start date to the current date
+    // because we can assume anything before that has already been added to the playlist
+    let current_date = chrono::offset::Local::now().date_naive().to_string();
+    let mut first_run = true;
+
     loop {
+        if !first_run {
+            filter_start_date = &current_date;
+        }
+        info!(
+            "Updating playlist {} with messages from the chat {} starting {} until now...",
+            playlist_id_str, chat_display_name, filter_start_date
+        );
+
         update_playlist(
             playlist_id_str,
             filter_start_date,
@@ -105,6 +119,10 @@ fn main() {
             chat_display_name,
             latest_message_id_file_path.as_path(),
         );
+
+        // no longer first run, can use current date as filter start date now
+        first_run = false;
+
         sleep(interval);
     }
 }

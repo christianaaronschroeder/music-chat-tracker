@@ -42,6 +42,11 @@ fn get_messages(
         None => "9999-12-31 23:59:59",
     };
 
+    info!(
+        "Loading messages from chat_id {} between {} and {}",
+        chat_id, filter_start_date, filter_stop_date
+    );
+
     let query = format!(
         r#"
         SELECT
@@ -145,7 +150,12 @@ pub fn get_tracks_from_messages(
     info!("Chat ID: {}", chat_id);
 
     let messages = get_messages(&conn, &chat_id, &filter_start_date, filter_stop_date)?;
-    info!("Messages: {:?}", messages.len());
+    // if there are no messages, we don't need to do anything
+    if messages.is_empty() {
+        return Ok(Vec::new());
+    }
+
+    info!("Messages loaded: {:?}", messages.len());
 
     // Check if the latest message is the same as last time the script was run
     let latest_message_id_str = messages.last().unwrap().id.to_string();
@@ -159,7 +169,7 @@ pub fn get_tracks_from_messages(
     } else {
         Vec::new()
     };
-    info!("Track IDs: {:?}", track_ids.len());
+    info!("Number of Unique Track IDs: {:?}", track_ids.len());
 
     // write the latest message id to the file
     let mut last_message_file = OpenOptions::new()

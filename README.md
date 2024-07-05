@@ -63,7 +63,7 @@ You can use the following command line arguments to override the values in your 
 
 `--filter-start-date`, `-f` - The start date for filtering.
 
-`--update-interval-s`, `-i` - The update interval in seconds. Defaults to `60*60*6`, 6 hours.
+`--update-interval-s`, `-i` - The update interval in seconds. Defaults to `60*60`, 1 hour.
 
 `--chat-db-path`, `-d` - The path to the chat database.
 
