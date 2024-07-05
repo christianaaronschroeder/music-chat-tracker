@@ -66,6 +66,8 @@ You can use the following command line arguments to override the values in your 
 `--update-interval-s`, `-i` - The update interval in seconds. Defaults to `60*60*6`, 6 hours.
 
 `--chat-db-path`, `-d` - The path to the chat database.
+#### Running a release
+What I've been doing while developing this is building a release, `cargo build --release`, and then running that in a separate terminal, `RUST_LOG=info ./target/release/music-chat-tracker`, so it can keep going while I work on my changes. NOTE: Building and running a release doesn't work with the command line args right now. Idk why. Gonna work on it.
 
 ## Notes
 ### TODO:
