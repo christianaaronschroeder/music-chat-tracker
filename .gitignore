@@ -7,3 +7,5 @@ bazel-*
 MODULE.bazel.lock
 .cache
 .spotify_token_cache.json
+*.ipynb
+*.py
