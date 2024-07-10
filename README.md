@@ -11,9 +11,8 @@ Make an automatically-updated Spotify playlist that acts as an archive of all so
 ## Dev Environment Setup
 ### Requirements
 This project should be run on MacOS with Messages signed in and synced. But it could be setup to work on a different OS as long there is a `chat.db` sqlite database of the messages available.
-You will need both Rust and PHP installed:
+You will need Rust installed:
 - [Install Rust](https://www.rust-lang.org/tools/install) `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-- [Install PHP](https://www.php.net/manual/en/install.macosx.packages.php) `brew install php` (planning to remove PHP as a requirement)
 
 ### IDE
 We prefer to use VSCode:
@@ -70,7 +69,6 @@ You can use the following command line arguments to override the values in your 
 ## Notes
 ### TODO:
 - [ ] get added date of most recent song to use as the filter start date
-- [x] rewrite that giant php thing in Rust, and make it smaller for only what I need
 - [ ] setup cron job
 - [ ] Rerun the script from Josh's iMessage so we can get all the songs from before I (Christian) joined the chat
     - This should not be a simple run of the script because the songs from before my time would be added to the playlist as if they were sent recently. This should be a one-time, manual process in which we use part of the script to get all the track IDs and then we can write a custom script to add them to the top of the playlist.
