@@ -9,3 +9,4 @@ MODULE.bazel.lock
 .spotify_token_cache.json
 *.ipynb
 *.py
+*.csv
