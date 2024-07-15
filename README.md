@@ -65,10 +65,3 @@ You can use the following command line arguments to override the values in your 
 `--update-interval-s`, `-i` - The update interval in seconds. Defaults to `60*60`, 1 hour.
 
 `--chat-db-path`, `-d` - The path to the chat database.
-
-## Notes
-### TODO:
-- [ ] get added date of most recent song to use as the filter start date
-- [ ] setup cron job
-- [ ] Rerun the script from Josh's iMessage so we can get all the songs from before I (Christian) joined the chat
-    - This should not be a simple run of the script because the songs from before my time would be added to the playlist as if they were sent recently. This should be a one-time, manual process in which we use part of the script to get all the track IDs and then we can write a custom script to add them to the top of the playlist.
