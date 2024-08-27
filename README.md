@@ -2,11 +2,11 @@
 
 ## Background
 #### Context
-We are in a several-years-old group chat with several of our friends where we discuss music, and we share songs through Spotify links.
+I am in a several-years-old group chat with a group of friends where we discuss music, and share songs through Spotify links.
 #### Problem
-Many of the chat members like to "claim" songs, i.e. make sure everyone knows they were the one who "found it." So, this causes a stir whenever a song that was previously shared is shared again. Due to the age of te group chat it, and the lackluster search feature in Apple Messages, it can be difficult to determine if a particular song has been shared before.
+Many of the chat members like to "claim" songs, i.e. make sure everyone knows they were the one who "found it." So, this causes a stir whenever a song that was previously shared is shared again. Due to the age of the group chat, and the lackluster search feature in Apple Messages, it can be difficult to determine if a particular song has been shared before.
 #### Solution
-Make an automatically-updated Spotify playlist that acts as an archive of all songs that have been shared in the group chat.
+Make an automatically updated Spotify playlist that acts as an archive of all songs that have been shared in the group chat. This still does not let us track who previously sent a song, but it instead can act as a log to check against before you accidentally re-share a song and get attacked by the music-mob.
 
 ## Dev Environment Setup
 ### Requirements
@@ -49,7 +49,11 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 
 ### Running it!
+#### How I've Been Running It
+To take advantage of Rust's optimizations I build a release whenever I make a change, and then run that `RUST_LOG=info ./target/release/music-chat-tracker --update-interval-s 600`
+#### Basic Commands
 - Build it: `cargo build`
+- Build it with optimizations and without debug symbols: `cargo build --release`
 - Test it: `cargo test`
 - Run it: `cargo run`
 - Run it with logs: `RUST_LOG=info cargo run`
