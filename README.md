@@ -1,4 +1,5 @@
 # music-chat-tracker
+This is a Rust program you can run locally that monitors your iMessages of a chosen chat looking for Spotify track URLs and adding any found tracks to a single Spotify playlist. This can run on any system that saves iMessages in a `chat.db` fashion, so likely only a Macbook.
 
 ## Background
 #### Context
@@ -7,6 +8,8 @@ I am in a several-years-old group chat with a group of friends where we discuss 
 Many of the chat members like to "claim" songs, i.e. make sure everyone knows they were the one who "found it." So, this causes a stir whenever a song that was previously shared is shared again. Due to the age of the group chat, and the lackluster search feature in Apple Messages, it can be difficult to determine if a particular song has been shared before.
 #### Solution
 Make an automatically updated Spotify playlist that acts as an archive of all songs that have been shared in the group chat. This still does not let us track who previously sent a song, but it instead can act as a log to check against before you accidentally re-share a song and get attacked by the music-mob.
+#### Why Rust?
+I went with Rust for two reasons. First, I am doing a lot more coding in Rust at work and thought it would be a good refresher project! But the main reason is that I keep this program constantly running on a 2017 Macbook that is on half of its last leg, so I wanted to make this as lightweight as I reasonably could. I prototyped this program in a Jupyter Notebook using `spotipy` and my Macbook would regularly shut off because it couldn't handle it. Also, someone had kindly built `rspotify` that already did everything I needed.
 
 ## Dev Environment Setup
 ### Requirements
@@ -50,7 +53,7 @@ note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 
 ### Running it!
 #### How I've Been Running It
-To take advantage of Rust's optimizations I build a release whenever I make a change, and then run that `RUST_LOG=info ./target/release/music-chat-tracker --update-interval-s 600`
+To take advantage of Rust's optimizations I build a release whenever I make a change and then run it with a 5-minute update interval, `RUST_LOG=info ./target/release/music-chat-tracker --update-interval-s 600`
 #### Basic Commands
 - Build it: `cargo build`
 - Build it with optimizations and without debug symbols: `cargo build --release`
